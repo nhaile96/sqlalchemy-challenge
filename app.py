@@ -42,8 +42,8 @@ def welcome():
         f"/api/v1.0/precipitation<br/>"
         f"/api/v1.0/stations<br/>"
         f"/api/v1.0/tobs<br/>"
-        f"/api/v1.0/<start><br/r>"
-        f"/api/v1.0/<start>/<end>"
+        f"/api/v1.0/start<br/r>"
+        f"/api/v1.0/start/end"
     )
 
 
@@ -74,8 +74,8 @@ def stations():
 
 @app.route("/api/v1.0/tobs")
 def tobs():
-    most_recent = session.query(measurement_class.date).\
-        order_by(measurement_class.date.desc()).first()
+    active_stations= session.query(measurement_class.station, func.count(measurement_class.tobs)).group_by(measurement_class.station).order_by(func.count(measurement_class.tobs).desc()).all()
+    most_active=active_stations[0][0]
     
     year_ago = dt.date(2017,8,23)-dt.timedelta(days=365)
 
@@ -85,10 +85,11 @@ def tobs():
         order_by(measurement_class.date).all()
 
     temperature_total=[]
-    for row in temperatures:
+    for result in temperatures:
         row={}
-        row["date"]=temperatures[0]
-        row["tobs"]=temperatures[1]
+        row["Station ID"]=result[0]
+        row["date"]=result[1]
+        row["tobs"]=result[2]
         temperature_total.append(row)
 
     return jsonify(temperature_total)
